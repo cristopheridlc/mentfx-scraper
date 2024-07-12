@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+from datetime import datetime
 
 # URL of the iframe containing the table
 iframe_url = 'https://mentfx.com/sentiment-viewer/index.php'
@@ -29,16 +30,17 @@ if table:
         for row in rows:
             cols = row.find_all('td')
             symbol = cols[0].text.strip()
-            intraday_bearish = cols[1].find('div', class_='bearish').text.strip()
-            intraday_bullish = cols[1].find('div', class_='bullish').text.strip()
-            daily_bearish = cols[2].find('div', class_='bearish').text.strip()
-            daily_bullish = cols[2].find('div', class_='bullish').text.strip()
+            intraday_bearish = int(cols[1].find('div', class_='bearish').text.strip('%')) / 100
+            intraday_bullish = int(cols[1].find('div', class_='bullish').text.strip('%')) / 100
+            daily_bearish = int(cols[2].find('div', class_='bearish').text.strip('%')) / 100
+            daily_bullish = int(cols[2].find('div', class_='bullish').text.strip('%')) / 100
             sentiment_data.append({
                 'Symbol': symbol,
                 'Intraday Bearish': intraday_bearish,
                 'Intraday Bullish': intraday_bullish,
                 'Daily Bearish': daily_bearish,
-                'Daily Bullish': daily_bullish
+                'Daily Bullish': daily_bullish,
+                'Report Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
         return sentiment_data
 
@@ -49,7 +51,7 @@ if table:
     
     # Write the data to a CSV file
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=['Symbol', 'Intraday Bearish', 'Intraday Bullish', 'Daily Bearish', 'Daily Bullish'])
+        writer = csv.DictWriter(file, fieldnames=['Symbol', 'Intraday Bearish', 'Intraday Bullish', 'Daily Bearish', 'Daily Bullish', 'Report Date'])
         writer.writeheader()
         for data in sentiment_data:
             writer.writerow(data)
